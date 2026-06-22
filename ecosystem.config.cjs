@@ -23,14 +23,14 @@ const loadEnv = () => {
 
 const env = {
   NODE_ENV: 'production',
-  PORT: '3098',
+  PORT: '3111',
   ...loadEnv()
 }
 
 module.exports = {
   apps: [
     {
-      name: 'aplicativo-rainha-da-bet',
+      name: 'bateu-rainha',
       cwd: __dirname,
       script: '.output/server/index.mjs',
       instances: 1,
