@@ -154,6 +154,15 @@
                                         <div class="adm-user-info">
                                             <strong>{{ u.name || "—" }}</strong>
                                             <span>{{ u.email }}</span>
+                                            <span
+                                                v-if="u.cactus_user_id"
+                                                class="adm-uid"
+                                                title="ID do jogador (Cactus)"
+                                                @click="copyUid(u.cactus_user_id)"
+                                            >
+                                                <Icon name="ph:identification-badge-bold" />
+                                                ID {{ u.cactus_user_id }}
+                                            </span>
                                         </div>
                                     </div>
                                 </td>
@@ -323,6 +332,7 @@ interface AppUser {
     email: string;
     name: string | null;
     phone: string | null;
+    cactus_user_id: number | string | null;
     brand_slug: string | null;
     blocked: boolean;
     last_seen_at: string | null;
@@ -431,6 +441,13 @@ const fmtDate = (v: string | null) =>
     v ? new Date(v).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 
 const waLink = (phone: string) => `https://wa.me/${phone.replace(/\D/g, "")}`;
+
+const copyUid = (id: number | string | null) => {
+    if (id == null) return;
+    if (import.meta.client && navigator.clipboard) {
+        navigator.clipboard.writeText(String(id)).catch(() => {});
+    }
+};
 
 const avatarStyle = (email: string) => {
     let h = 0;
@@ -801,6 +818,14 @@ useHead({ title: "Painel Admin - Rainha da Bet" });
 .adm-user-info { display: flex; flex-direction: column; }
 .adm-user-info strong { font-size: 13.5px; }
 .adm-user-info span { font-size: 12px; color: var(--adm-muted); }
+.adm-uid {
+    font-size: 11px; color: var(--adm-faint);
+    display: inline-flex; align-items: center; gap: 4px;
+    font-variant-numeric: tabular-nums; cursor: pointer; width: fit-content;
+    transition: color 0.2s;
+}
+.adm-uid:hover { color: var(--adm-accent); }
+.adm-uid :deep(svg) { font-size: 13px; }
 .adm-wa { color: var(--adm-green); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .adm-wa:hover { text-decoration: underline; }
 .adm-phone-cell { display: flex; align-items: center; gap: 6px; }

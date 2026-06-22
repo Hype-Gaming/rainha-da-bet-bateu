@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
   const rows = await db.collection('app_users').aggregate(pipeline).toArray()
 
   const header = [
-    'Nome', 'E-mail', 'Telefone', 'Assinatura', 'PIX (qtd)', 'Valor PIX',
+    'Nome', 'E-mail', 'Telefone', 'ID Jogador', 'Assinatura', 'PIX (qtd)', 'Valor PIX',
     'Marca', '1º acesso', 'Último acesso', 'Status', 'Risco', 'Status contato'
   ]
   const lines = [header.join(';')]
@@ -65,6 +65,7 @@ export default defineEventHandler(async (event) => {
       csvCell(u.name),
       csvCell(u.email),
       csvCell(u.phone),
+      csvCell(u.cactus_user_id),
       csvCell(u.subscription === 'paid' ? 'Pago' : 'Free'),
       csvCell(u.deposits_count ?? 0),
       csvCell((u.deposits_sum ?? 0).toFixed(2).replace('.', ',')),
