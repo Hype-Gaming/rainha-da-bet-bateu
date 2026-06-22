@@ -1,0 +1,45 @@
+name: Deploy
+
+# Dispara a cada push na main e também manualmente (Actions -> Deploy -> Run workflow).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Evita dois deploys simultâneos pisando um no outro. Não cancela o que já roda
+# (cancelar no meio de um build/pm2 reload pode deixar a VPS em estado inconsistente).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # O build acontece NA VPS. O runner só abre uma sessão SSH e roda o script remoto.
+      # Pré-requisitos na VPS (ver docs/ci-cd-setup.md): Node 20, pm2, repo já clonado
+      # via remote SSH com Deploy Key, e o .env preenchido (MONGODB_URI + MONGODB_DB).
+      - name: Deploy na VPS via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          # Aborta no primeiro comando que falhar (não segue pro pm2 se o build quebrou).
+          script_stop: true
+          script: |
+            set -e
+            cd "${{ secrets.VPS_PATH }}"
+
+            # Pega exatamente o que está na origin/main (deploy determinístico).
+            # reset --hard só mexe em arquivos versionados; o .env é gitignored, fica intacto.
+            git fetch --prune origin main
+            git reset --hard origin/main
+
+            npm ci
+            npm run build
+
+            # startOrReload: sobe na 1ª vez e recarrega nas seguintes, sempre relendo o .env.
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save
