@@ -1,6 +1,6 @@
 import { getDb } from '../../utils/mongodb'
 import { requireAdmin } from '../../utils/admin'
-import { buildUserEnrichmentStages, buildSubsOnlyUnion, HOUR_MS } from '../../utils/adminUserEnrichment'
+import { buildUserEnrichmentStages, buildSubsOnlyUnion, HOUR_MS, panelBrandMatch } from '../../utils/adminUserEnrichment'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
 
   // total de usuários, em risco e conversão via união + enriquecimento
   const enriched = await appUsers.aggregate([
-    { $match: {} },
+    { $match: panelBrandMatch() },
     ...buildSubsOnlyUnion(),
     ...buildUserEnrichmentStages(now),
     {
@@ -36,11 +36,12 @@ export default defineEventHandler(async (event) => {
   const paid = f.paid?.[0]?.n || 0
   const paidWithPix = f.paidWithPix?.[0]?.n || 0
 
+  const brandFilter = panelBrandMatch()
   const [active48h, newToday, new7d, depAgg] = await Promise.all([
-    appUsers.countDocuments({ last_seen_at: { $gte: cutoff48 } }),
-    appUsers.countDocuments({ first_seen_at: { $gte: startToday } }),
-    appUsers.countDocuments({ first_seen_at: { $gte: cutoff7d } }),
-    deposits.aggregate([{ $group: { _id: null, count: { $sum: 1 }, sum: { $sum: '$amount' } } }]).toArray()
+    appUsers.countDocuments({ ...brandFilter, last_seen_at: { $gte: cutoff48 } }),
+    appUsers.countDocuments({ ...brandFilter, first_seen_at: { $gte: startToday } }),
+    appUsers.countDocuments({ ...brandFilter, first_seen_at: { $gte: cutoff7d } }),
+    deposits.aggregate([{ $match: brandFilter }, { $group: { _id: null, count: { $sum: 1 }, sum: { $sum: '$amount' } } }]).toArray()
   ])
 
   const depositsCount = depAgg[0]?.count || 0

@@ -1,5 +1,6 @@
 import { getDb } from '../../utils/mongodb'
 import { requireAdmin } from '../../utils/admin'
+import { panelBrandMatch } from '../../utils/adminUserEnrichment'
 
 const TZ = 'America/Sao_Paulo'
 
@@ -12,8 +13,9 @@ export default defineEventHandler(async (event) => {
   start.setHours(0, 0, 0, 0)
   start.setDate(start.getDate() - 13) // 14 dias incluindo hoje
 
+  const brandFilter = panelBrandMatch()
   const groupByDay = (field: string) => [
-    { $match: { [field]: { $gte: start } } },
+    { $match: { ...brandFilter, [field]: { $gte: start } } },
     {
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: `$${field}`, timezone: TZ } },

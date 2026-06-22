@@ -1,6 +1,6 @@
 import { getDb } from '../../utils/mongodb'
 import { requireAdmin } from '../../utils/admin'
-import { buildUserEnrichmentStages, buildSubsOnlyUnion } from '../../utils/adminUserEnrichment'
+import { buildUserEnrichmentStages, buildSubsOnlyUnion, panelBrandMatch, PANEL_BRAND } from '../../utils/adminUserEnrichment'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -15,14 +15,16 @@ export default defineEventHandler(async (event) => {
   const brand = String(q.brand || '').trim()
   const rx = search ? new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
 
-  const match: Record<string, any> = {}
+  // Base: só a marca do painel (bateu + sem-marca); exclui marcas estrangeiras.
+  const match: Record<string, any> = panelBrandMatch()
   if (rx) match.$or = [{ email: rx }, { name: rx }, { phone: rx }]
   if (status === 'active') match.blocked = { $ne: true }
   if (status === 'blocked') match.blocked = true
-  if (brand) match.brand_slug = brand
+  // Narrowing opcional só dentro da marca do painel (ignora qualquer outra).
+  if (brand === PANEL_BRAND) match.brand_slug = brand
 
   // assinantes-only só fazem sentido quando não filtra por bloqueados nem por marca
-  const includeSubsOnly = status !== 'blocked' && !brand
+  const includeSubsOnly = status !== 'blocked' && brand !== PANEL_BRAND
   const subUnion = includeSubsOnly ? buildSubsOnlyUnion(rx) : []
 
   const post: Record<string, any> = {}
@@ -45,7 +47,8 @@ export default defineEventHandler(async (event) => {
   const col = db.collection('app_users')
   const [agg, brands] = await Promise.all([
     col.aggregate(pipeline).toArray(),
-    col.distinct('brand_slug', { brand_slug: { $nin: [null, ''] } })
+    // dropdown de marca: só a do painel (não expõe marcas estrangeiras do banco)
+    col.distinct('brand_slug', { brand_slug: PANEL_BRAND })
   ])
   const r = agg[0]
   return {

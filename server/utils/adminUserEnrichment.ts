@@ -2,6 +2,21 @@ import type { Document } from 'mongodb'
 
 export const HOUR_MS = 60 * 60 * 1000
 
+// Marca deste painel. O banco é compartilhado com o app de outra marca (ex.:
+// "esportiva"), que grava os próprios usuários aqui. Para o painel refletir só o
+// negócio da bateu, filtramos por marca.
+export const PANEL_BRAND = 'bateu'
+
+/**
+ * Filtro de marca do painel (allow-list, não denylist).
+ * Inclui 'bateu' e os registros SEM marca (null/ausente = legado e assinantes
+ * deste app, que nunca receberam tag) — e exclui marcas estrangeiras presentes
+ * ou futuras no banco compartilhado.
+ */
+export const panelBrandMatch = (): Record<string, any> => ({
+  brand_slug: { $in: [PANEL_BRAND, null] }
+})
+
 /**
  * Injeta assinantes ativos (subscriptions.status='active') que NÃO têm registro em
  * app_users como "usuários" sintéticos (pagaram mas nunca abriram o app).

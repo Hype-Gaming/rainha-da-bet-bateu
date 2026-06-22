@@ -1,5 +1,6 @@
 import { getDb } from '../../utils/mongodb'
 import { requireAdmin } from '../../utils/admin'
+import { panelBrandMatch } from '../../utils/adminUserEnrichment'
 
 export default defineEventHandler(async (event) => {
   await requireAdmin(event)
@@ -10,9 +11,10 @@ export default defineEventHandler(async (event) => {
 
   const db = await getDb()
   const col = db.collection('deposits')
+  const brandFilter = panelBrandMatch()
   const [rows, total] = await Promise.all([
-    col.find({}).sort({ created_at: -1 }).skip(skip).limit(limit).toArray(),
-    col.countDocuments({})
+    col.find(brandFilter).sort({ created_at: -1 }).skip(skip).limit(limit).toArray(),
+    col.countDocuments(brandFilter)
   ])
 
   return {

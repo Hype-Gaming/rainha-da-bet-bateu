@@ -1,6 +1,6 @@
 import { getDb } from '../../../utils/mongodb'
 import { requireAdmin } from '../../../utils/admin'
-import { buildUserEnrichmentStages, buildSubsOnlyUnion } from '../../../utils/adminUserEnrichment'
+import { buildUserEnrichmentStages, buildSubsOnlyUnion, panelBrandMatch, PANEL_BRAND } from '../../../utils/adminUserEnrichment'
 
 const csvCell = (v: unknown): string => {
   let s = v == null ? '' : String(v)
@@ -27,13 +27,14 @@ export default defineEventHandler(async (event) => {
   const brand = String(q.brand || '').trim()
   const rx = search ? new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null
 
-  const match: Record<string, any> = {}
+  // Base: só a marca do painel (bateu + sem-marca); exclui marcas estrangeiras.
+  const match: Record<string, any> = panelBrandMatch()
   if (rx) match.$or = [{ email: rx }, { name: rx }, { phone: rx }]
   if (status === 'active') match.blocked = { $ne: true }
   if (status === 'blocked') match.blocked = true
-  if (brand) match.brand_slug = brand
+  if (brand === PANEL_BRAND) match.brand_slug = brand
 
-  const includeSubsOnly = status !== 'blocked' && !brand
+  const includeSubsOnly = status !== 'blocked' && brand !== PANEL_BRAND
   const subUnion = includeSubsOnly ? buildSubsOnlyUnion(rx) : []
 
   const post: Record<string, any> = {}
