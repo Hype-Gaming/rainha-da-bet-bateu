@@ -29,7 +29,9 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        { rel: 'icon', type: 'image/png', href: '/logo.png' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico?v=2' },
+        { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/favicon-48.png?v=2' },
+        { rel: 'apple-touch-icon', href: '/favicon.ico?v=2' }
       ]
     }
   },
