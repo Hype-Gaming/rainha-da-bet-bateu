@@ -21,16 +21,13 @@
 </template>
 
 <script setup lang="ts">
-// 🔧 SUPORTE: troque pelo número real (só dígitos, com DDI). Ex.: 55 11 99999-9999 → "5511999999999"
-const SUPPORT_WHATSAPP = "55557199359623";
+// 🔧 SUPORTE: link "click to chat" do WhatsApp (já traz número e mensagem embutidos).
+const SUPPORT_WHATSAPP_LINK = "https://wa.me/5571993887915";
 
 const { logout } = useAuth();
 const { setBlocked } = useAccountBlocked();
 
-const supportLink = computed(() => {
-    const msg = "Oi%2C+preciso+desbloquear+meu+aplicativo";
-    return `https://wa.me/${SUPPORT_WHATSAPP}?text=${msg}`;
-});
+const supportLink = computed(() => SUPPORT_WHATSAPP_LINK);
 
 // X: fecha o overlay e volta para a tela de autenticação (logout redireciona pro login).
 const onLogout = async () => {
