@@ -29,7 +29,7 @@ export const useGame = () => {
     const configKey = `${ref.collection}/${ref.name}`
     if (UNAVAILABLE_SIGNAL_CONFIGS.has(configKey)) {
       const fallback: GameSignalConfig = {
-        signalUrl: 'wss://ws-signals.grupoautoma.com/ws',
+        signalUrl: 'wss://ws-signals.automagroup.cloud/ws',
         signalName: ref.name,
         signalCollection: ref.collection
       }
@@ -61,7 +61,7 @@ export const useGame = () => {
       if (!ref) return null
 
       const fallback: GameSignalConfig = {
-        signalUrl: 'wss://ws-signals.grupoautoma.com/ws',
+        signalUrl: 'wss://ws-signals.automagroup.cloud/ws',
         signalName: ref.name,
         signalCollection: ref.collection
       }
